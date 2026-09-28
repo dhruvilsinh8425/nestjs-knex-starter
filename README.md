@@ -22,6 +22,20 @@ npm run start:dev
   - Outside `NODE_ENV=development` it is protected with `BASIC_AUTH_USER_NAME` / `BASIC_AUTH_PASSWORD` and is disabled if no password is set.
 No local MySQL? `npm run db:up` starts one in Docker using the `DB_*` values from `.env` (`DB_USER` must be `root`).
 
+## Use as a template for a new project
+
+1. Copy the folder **without** `.git`, `node_modules` and `dist` (or use GitHub's "Use this template").
+2. Rename: `name` in `package.json`, the title of this README, and `PROJECT_NAME` / `DB_DATABASE` / `APP_OPEN_SLUG` in `.env.example`.
+3. Create a new git repository for it (never reuse another project's `.git` or remote).
+4. `cp .env.example .env` (PowerShell: `Copy-Item .env.example .env`), set `DB_*`, `API_APP_KEY` and `JWT_SECRET`, then run the quick start above.
+5. Before going live: `NODE_ENV=production` (turns off the `000000` OTP), a `JWT_SECRET` of 32+ characters, a strong `API_APP_KEY` and a `BASIC_AUTH_PASSWORD` for Swagger.
+
+## Security
+
+- Env variables are validated on startup (`src/app/env.validation.ts`); the app refuses to start if a required one is missing.
+- Rate limit per IP (`@nestjs/throttler`): `THROTTLE_LIMIT` requests per `THROTTLE_TTL_SEC` for all routes, and `THROTTLE_AUTH_LIMIT` for auth routes that send codes or check passwords. Over the limit returns HTTP 429 with `errorCode: 429`. Use `@AuthThrottle()` / `@SkipThrottle()` on your own routes. Limits are kept in memory, so with several servers use a shared store such as Redis.
+- `helmet` sets security headers, and the database connection is closed on shutdown.
+
 ## Auth
 
 Send the returned `accessToken` as the `x-session-key` header. Full logins also return a `refreshToken` for `POST /auth/refresh`. Endpoints that create a session accept an optional `x-device-id` header (one session per user per device). The OTP `000000` is accepted everywhere except `NODE_ENV=production`.

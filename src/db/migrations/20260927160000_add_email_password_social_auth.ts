@@ -2,7 +2,6 @@ import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
     await knex.schema.alterTable('users', (table) => {
-        table.dropColumn('user_type');
         table.string('country_code', 10).nullable().after('email');
         table.string('phone', 20).nullable().alter();
         table.boolean('is_email_verified').notNullable().defaultTo(false).after('avatar');
@@ -69,6 +68,5 @@ export async function down(knex: Knex): Promise<void> {
         table.dropColumn('social_google_id');
         table.dropColumn('is_email_verified');
         table.dropColumn('country_code');
-        table.string('user_type', 20).notNullable().defaultTo('TENANT');
     });
 }

@@ -1,6 +1,7 @@
 export enum ApiEC {
     // 0. Other/Service/Server
     None = 0,
+    TooManyRequests = 429,
     InternalServerError = 500,
     ServiceUnavailable = 503,
 

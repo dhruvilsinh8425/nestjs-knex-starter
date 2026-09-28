@@ -1,6 +1,7 @@
 import { join, resolve } from 'path';
 import { writeFileSync } from 'fs';
 import basicAuth from 'express-basic-auth';
+import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
@@ -42,6 +43,14 @@ const bootstrap = async () => {
         })
     );
     app.useGlobalFilters(new GlobalExceptionFilter());
+    app.use(
+        helmet({
+            // Swagger UI needs inline scripts, and uploaded files are loaded from other origins
+            contentSecurityPolicy: false,
+            crossOriginResourcePolicy: { policy: 'cross-origin' },
+        })
+    );
+    app.enableShutdownHooks();
     app.enable('trust proxy');
     app.disable('etag'); // Prevent code: 304 - Not Modified on IOS devices
 

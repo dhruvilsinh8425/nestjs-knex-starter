@@ -76,11 +76,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         }
 
         const errorResponseDTO = apiException.toErrorDTO();
+        const status = errorResponseDTO.errorCode === ApiEC.TooManyRequests ? 429 : 400;
 
         if (exception instanceof ApiException || process.env.NODE_ENV === 'production') {
-            response.status(400).json(errorResponseDTO);
+            response.status(status).json(errorResponseDTO);
         } else {
-            response.status(400).json({ ...errorResponseDTO, exception });
+            response.status(status).json({ ...errorResponseDTO, exception });
         }
     }
 }

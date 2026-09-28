@@ -1,5 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { HealthCheck, HealthCheckResult, HealthCheckService, HealthIndicatorService } from '@nestjs/terminus';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Model } from 'objection';
 import { RootService } from './root.service';
 
@@ -12,6 +13,7 @@ export class RootController {
     ) {}
 
     @Get('health-check')
+    @SkipThrottle()
     @HealthCheck()
     healthCheck(): Promise<HealthCheckResult> {
         return this.health.check([() => this.checkDatabase()]);

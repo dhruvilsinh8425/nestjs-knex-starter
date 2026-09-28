@@ -1,5 +1,6 @@
 import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiHeader, ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { AuthThrottle, DefaultThrottle } from 'src/app/throttle';
 import { ApiErrorResponse } from 'src/exceptions/dto';
 import { AuthService } from './auth.service';
 import { UserPassport } from './decorators';
@@ -45,6 +46,7 @@ const DeviceIdHeader = () =>
     description: 'Bad response',
     type: ApiErrorResponse,
 })
+@AuthThrottle()
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -124,6 +126,7 @@ export class AuthController {
     }
 
     @Post('guest-sign-in')
+    @DefaultThrottle()
     @DeviceIdHeader()
     @ApiOperation({ summary: 'Create a guest session' })
     async guestSignIn(
@@ -182,6 +185,7 @@ export class AuthController {
     }
 
     @Post('refresh')
+    @DefaultThrottle()
     @DeviceIdHeader()
     @ApiOperation({ summary: 'Get a new access token with a refresh token' })
     async refresh(
@@ -192,6 +196,7 @@ export class AuthController {
     }
 
     @Post('logout')
+    @DefaultThrottle()
     @ApiSecurity('X_SESSION_KEY')
     @UseGuards(JwtGuestAuthGuard)
     @ApiOperation({ summary: 'Revoke the refresh token and end the current session' })

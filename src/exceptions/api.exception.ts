@@ -38,6 +38,8 @@ export class ApiException extends Error {
         switch (errorCode) {
             case ApiEC.InternalServerError:
                 return 'API_ERROR_INTERNAL_SERVER_ERROR';
+            case ApiEC.TooManyRequests:
+                return 'API_ERROR_TOO_MANY_REQUESTS';
             case ApiEC.WrongAppKey:
                 return 'API_ERROR_WRONG_APP_KEY';
             case ApiEC.AccessDenied:

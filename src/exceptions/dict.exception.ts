@@ -224,6 +224,12 @@ export const errorText: Record<
     },
 
     // 7. Other/Service/Server
+    API_ERROR_TOO_MANY_REQUESTS: {
+        message: 'Too many requests. Please wait a moment and try again.',
+        title: 'Request Error',
+        module: 'api',
+        alertType: 'alert',
+    },
     API_ERROR_INVALID_REQUEST: {
         message: 'Action is not available. Refresh the page and/or try again later.',
         title: 'Request Error',
