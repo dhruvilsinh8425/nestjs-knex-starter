@@ -15,7 +15,7 @@ export class RootService {
         // http://localhost:3000/app-store?page=apartment&id=1
         const redirectPage = renderFile(resolve('./templates/web/app_store.pug'), {
             ...dto,
-            appOpenSlug: this.configService.get('APP_OPEN_SLUG', 'sow_crm'),
+            appOpenSlug: this.configService.get('APP_OPEN_SLUG', 'app'),
             appName: this.configService.get('PROJECT_NAME', 'App Name'),
             appleStoreUrl: this.configService.get('APP_ITUNES_URL', ''),
             googlePlayUrl: this.configService.get('GOOGLE_PLAY_URL', ''),

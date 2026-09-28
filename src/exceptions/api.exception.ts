@@ -87,7 +87,16 @@ export class ApiException extends Error {
             case ApiEC.UserNotFoundByPhone:
                 return 'API_ERROR_USER_NOT_FOUND_BY_PHONE';
             case ApiEC.PhoneAlreadyExist:
+            case ApiEC.PhoneAlreadyRegistered:
                 return 'API_ERROR_PHONE_ALREADY_EXIST';
+            case ApiEC.PhoneAlreadyVerified:
+                return 'API_ERROR_PHONE_ALREADY_VERIFIED';
+            case ApiEC.WrongInputPhone:
+                return 'API_ERROR_WRONG_INPUT_PHONE';
+            case ApiEC.PhoneNumberWrong:
+                return 'API_ERROR_PHONE_NUMBER_WRONG';
+            case ApiEC.PleaseAddValidPhoneNo:
+                return 'API_ERROR_PLEASE_ADD_VALID_PHONE_NUMBER';
         }
 
         return '';

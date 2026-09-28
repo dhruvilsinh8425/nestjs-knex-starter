@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNumber, IsOptional, IsPositive, Max } from 'class-validator';
+import { IsInt, IsOptional, IsPositive, Max } from 'class-validator';
 import { paginationConstants } from '../constants';
 
 export class PageInfo {

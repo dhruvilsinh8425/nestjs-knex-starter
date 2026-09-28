@@ -76,8 +76,12 @@ const bootstrap = async () => {
 
         // Export swagger doc in JSON format
         const swaggerDoc = resolve(env === 'development' ? 'src/swagger' : 'dist', 'swagger.doc.json');
-        writeFileSync(swaggerDoc, JSON.stringify(document, null, 2));
-        logger.debug(`${appName} Swagger doc in ${swaggerDoc}`);
+        try {
+            writeFileSync(swaggerDoc, JSON.stringify(document, null, 2));
+            logger.debug(`${appName} Swagger doc in ${swaggerDoc}`);
+        } catch (err) {
+            logger.warn(`Cannot write ${swaggerDoc}: ${err?.message}`);
+        }
 
         SwaggerModule.setup(apiDoc, app, document, {
             customSiteTitle: appName + ' | ' + 'Swagger UI',

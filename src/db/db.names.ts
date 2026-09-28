@@ -11,4 +11,13 @@ export const dbNames = {
     sessionTokens: {
         tableName: 'session_tokens',
     },
+    creds: {
+        tableName: 'creds',
+    },
+    resetTokens: {
+        tableName: 'reset_tokens',
+    },
+    fileData: {
+        tableName: 'file_data',
+    },
 };

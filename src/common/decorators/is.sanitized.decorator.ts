@@ -2,8 +2,7 @@ import validator from 'validator';
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 
 export function IsSanitized(validationOptions?: ValidationOptions) {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    return function (object: Object, propertyName: string) {
+    return function (object: object, propertyName: string) {
         registerDecorator({
             name: 'IsSanitized',
             target: object.constructor,

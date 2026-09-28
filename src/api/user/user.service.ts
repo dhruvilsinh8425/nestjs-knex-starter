@@ -93,7 +93,10 @@ export class UserService {
     }
 
     private toAuthUser(user: User): AuthUserResponse {
-        const fullName = [user.first_name, user.last_name].filter((value) => !!value).join(' ').trim();
+        const fullName = [user.first_name, user.last_name]
+            .filter((value) => !!value)
+            .join(' ')
+            .trim();
 
         return {
             id: user.id,

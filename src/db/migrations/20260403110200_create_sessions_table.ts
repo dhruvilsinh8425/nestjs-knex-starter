@@ -11,11 +11,7 @@ export async function up(knex: Knex): Promise<void> {
         table.string('status', 20).notNullable().defaultTo('ACTIVE');
         table.timestamps(true, true);
 
-        table
-            .foreign('user_id', 'sessions_user_id_foreign')
-            .references('id')
-            .inTable('users')
-            .onDelete('CASCADE');
+        table.foreign('user_id', 'sessions_user_id_foreign').references('id').inTable('users').onDelete('CASCADE');
 
         table.index(['user_id', 'device_id'], 'sessions_user_device_index');
         table.index(['status', 'expired_at'], 'sessions_status_expired_at_index');

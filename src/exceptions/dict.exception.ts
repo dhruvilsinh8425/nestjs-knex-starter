@@ -66,6 +66,12 @@ export const errorText: Record<
         module: 'verification',
         alertType: 'alert',
     },
+    API_ERROR_PHONE_ALREADY_VERIFIED: {
+        message: 'Your phone number is already verified.',
+        title: 'Verification Error',
+        module: 'verification',
+        alertType: 'alert',
+    },
     API_ERROR_UNSUPPORTED_APP_VERSION: {
         message: 'Please update the app to continue.',
         title: 'Update Required',

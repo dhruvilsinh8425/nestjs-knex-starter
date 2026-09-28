@@ -1,10 +1,10 @@
 {
     "name": "nestjs-knex-starter",
     "version": "0.0.1",
-    "description": "CRM API Server",
-    "author": "SM Infosoft Pvt Ltd",
+    "description": "NestJS + Knex/Objection (MySQL) API starter",
+    "author": "",
     "private": true,
-    "license": "private",
+    "license": "UNLICENSED",
     "engines": {
         "node": ">=22.12.0"
     },

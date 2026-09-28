@@ -1,22 +1,24 @@
-import { AnyQueryBuilder, Model, QueryContext } from 'objection';
-import { v4 as uuidv4 } from 'uuid';
+import { AnyQueryBuilder, Model } from 'objection';
 import { SessionUserInfo } from 'src/api/auth/dto';
 import { AuthType } from 'src/api/auth/enums';
 import { commonConstants } from 'src/common/constants';
-import { StatusType, UserType } from 'src/common/enums';
+import { StatusType } from 'src/common/enums';
 import { dbNames } from 'src/db/db.names';
 import { Session } from '.';
 
 export class User extends Model {
     id: number;
     auth_type: AuthType;
-    user_type: UserType;
     first_name?: string | null;
     last_name?: string | null;
     email?: string | null;
+    country_code?: string | null;
     phone?: string | null;
     avatar?: string | null;
+    is_email_verified: boolean;
     is_phone_verified: boolean;
+    social_google_id?: string | null;
+    social_apple_id?: string | null;
     status: StatusType;
     created_at?: string;
     updated_at?: string;
@@ -40,13 +42,16 @@ export class User extends Model {
             properties: {
                 id: { type: 'integer' },
                 auth_type: { enum: Object.values(AuthType) },
-                user_type: { enum: Object.values(UserType) },
                 first_name: { type: ['null', 'string'] },
                 last_name: { type: ['null', 'string'] },
                 email: { type: ['null', 'string'] },
-                phone: { type: ['null', 'string'] },
+                country_code: { type: ['null', 'string'], maxLength: 10 },
+                phone: { type: ['null', 'string'], maxLength: 20 },
                 avatar: { type: ['null', 'string'] },
+                is_email_verified: { type: 'boolean' },
                 is_phone_verified: { type: 'boolean' },
+                social_google_id: { type: ['null', 'string'], maxLength: 255 },
+                social_apple_id: { type: ['null', 'string'], maxLength: 255 },
                 status: { enum: Object.values(StatusType), default: StatusType.Active },
             },
         };
@@ -87,6 +92,10 @@ export class User extends Model {
         };
     }
 
+    isVerified(): boolean {
+        return !!this.is_email_verified || !!this.is_phone_verified || this.auth_type === AuthType.Apple;
+    }
+
     fullName(): string {
         const fullName: string[] = [];
 
@@ -105,13 +114,14 @@ export class User extends Model {
         return {
             id: this.id,
             authType: this.auth_type,
-            userType: this.user_type,
             firstName: this.first_name ?? undefined,
             lastName: this.last_name ?? undefined,
             email: this.email ?? undefined,
+            countryCode: this.country_code ?? undefined,
             phone: this.phone ?? undefined,
             avatar: this.avatar ?? null,
             sessionToken: this.sessionToken ?? undefined,
+            isEmailVerified: !!this.is_email_verified,
             isPhoneVerified: !!this.is_phone_verified,
             status: this.status,
         };

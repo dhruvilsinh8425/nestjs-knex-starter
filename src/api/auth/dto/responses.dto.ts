@@ -3,6 +3,14 @@ import { StatusType } from 'src/common/enums';
 import { AuthType } from '../enums';
 import { SessionUserInfo } from './auth.entity';
 
+export class OtpSentResponse {
+    @ApiProperty()
+    isSent: boolean;
+
+    @ApiProperty({ description: 'Seconds to wait before a new code can be requested' })
+    timeout: number;
+}
+
 export class AuthSessionUserResponse {
     @ApiProperty({ type: () => SessionUserInfo })
     sessionUser: SessionUserInfo;
@@ -14,6 +22,13 @@ export class AuthSuccessResponse extends AuthSessionUserResponse {
 
     @ApiProperty({ required: false, description: 'Only returned for a fully verified login' })
     refreshToken?: string;
+
+    @ApiProperty({
+        required: false,
+        type: () => OtpSentResponse,
+        description: 'Set when a verification code was sent (create-account, login-with-phone)',
+    })
+    otp?: OtpSentResponse;
 }
 
 export class AuthUserResponse {
@@ -39,7 +54,7 @@ export class AuthUserResponse {
     updatedAt?: string | null;
 }
 
-export class SendOtpResponse {
+export class SendOtpResponse extends OtpSentResponse {
     @ApiProperty()
     message: string;
 }
@@ -52,7 +67,7 @@ export class RefreshTokenResponse {
     refreshToken: string;
 }
 
-export class VerifyOtpResponse extends RefreshTokenResponse {
+export class VerifyOtpResponse extends AuthSuccessResponse {
     @ApiProperty()
     message: string;
 

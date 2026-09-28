@@ -1,8 +1,9 @@
 import { fn } from 'objection';
 import { Injectable, Logger } from '@nestjs/common';
-import { SessionUserInfo } from 'src/api/auth/dto';
+import { commonConstants } from 'src/common/constants';
 import { StatusType } from 'src/common/enums';
 import { Otp } from 'src/models';
+import { EmailType, MailService } from '../mail';
 import { SMSService } from '../sms/sms.service';
 import { SMSType } from '../sms';
 import { otpConstants } from './constants';
@@ -11,36 +12,52 @@ import {
     ChannelOtpTypeForcedRequest,
     ChannelOtpTypeRequest,
     OtpCodeResponse,
+    OtpTarget,
     OtpTypeRequest,
 } from './dto';
-import { OtpType } from './enums';
+import { emailOtpTypes, OtpType } from './enums';
+
+const emailTypeByOtpType: Partial<Record<OtpType, EmailType>> = {
+    [OtpType.VerifyEmail]: EmailType.VerifyEmail,
+    [OtpType.ResetPasswordEmail]: EmailType.ResetPassword,
+};
+
+const smsTypeByOtpType: Partial<Record<OtpType, SMSType>> = {
+    [OtpType.VerifyPhone]: SMSType.VerifyPhone,
+    [OtpType.ResetPasswordPhone]: SMSType.ResetPasswordPhone,
+};
 
 @Injectable()
 export class OtpService {
     private readonly logger = new Logger(OtpService.name);
 
-    constructor(private readonly smsService: SMSService) {}
+    constructor(
+        private readonly smsService: SMSService,
+        private readonly mailService: MailService
+    ) {}
 
-    private normalizeChannel(phone?: string): string | null {
-        const normalizedPhone = phone?.trim();
-        return normalizedPhone || null;
+    static channelFor(target: OtpTarget, otpType: OtpType): string | null {
+        const channel = emailOtpTypes.includes(otpType) ? target.email?.trim().toLowerCase() : target.phone?.trim();
+        return channel || null;
     }
 
     private static generateOtpCode(): string {
         let result = '';
 
         for (let i = 0; i < otpConstants.codeLength; i++) {
-            result += otpConstants.codeCharacters.charAt(Math.floor(Math.random() * otpConstants.codeCharacters.length));
+            result += otpConstants.codeCharacters.charAt(
+                Math.floor(Math.random() * otpConstants.codeCharacters.length)
+            );
         }
 
         return result;
     }
 
-    private async getCurrentOtpCode({ channel, otpType }: ChannelOtpTypeRequest): Promise<Otp | undefined> {
-        if (!channel) {
-            return;
-        }
+    private static isMasterCode(code: string): boolean {
+        return process.env.NODE_ENV !== 'production' && code === commonConstants.otpCode;
+    }
 
+    private async getCurrentOtpCode({ channel, otpType }: ChannelOtpTypeRequest): Promise<Otp | undefined> {
         await this.disableOtpCode({ channel, otpType });
 
         return Otp.query()
@@ -68,15 +85,28 @@ export class OtpService {
             return false;
         }
 
+        if (OtpService.isMasterCode(code)) {
+            return true;
+        }
+
         return !!(await Otp.query()
             .findOne({ channel, code, otp_type: otpType, status: StatusType.Active })
             .where('expired_at', '>=', fn.now()));
     }
 
-    async requestOTPCode(user: SessionUserInfo, { otpType, isNewOtp }: OtpTypeRequest): Promise<OtpCodeResponse> {
-        const channel = this.normalizeChannel(user.phone);
+    /** Checks the code and disables it, so each code works only once. */
+    async consumeOtpCode(request: ChannelCodeWithOtpTypeRequest): Promise<boolean> {
+        if (!(await this.isOtpCodeValid(request))) {
+            return false;
+        }
 
-        if (!channel || otpType !== OtpType.VerifyPhone) {
+        await this.disableOtpCode({ channel: request.channel, otpType: request.otpType, force: true });
+        return true;
+    }
+
+    async requestOTPCode(target: OtpTarget, { otpType, isNewOtp }: OtpTypeRequest): Promise<OtpCodeResponse> {
+        const channel = OtpService.channelFor(target, otpType);
+        if (!channel) {
             return { isSent: false, timeout: 0 };
         }
 
@@ -85,6 +115,15 @@ export class OtpService {
         }
 
         let otpCode = await this.getCurrentOtpCode({ channel, otpType });
+        if (otpCode?.sent_at) {
+            const secondsSinceSent = Math.floor((Date.now() - new Date(otpCode.sent_at).getTime()) / 1000);
+            const timeout = otpConstants.requestTimeout - secondsSinceSent;
+
+            if (timeout > 0) {
+                return { isSent: false, timeout };
+            }
+        }
+
         if (!otpCode) {
             otpCode = await Otp.query().insert({
                 channel,
@@ -99,33 +138,28 @@ export class OtpService {
             });
         }
 
-        const timeoutForNextSent =
-            otpConstants.requestTimeout -
-            (otpCode.sent_at
-                ? Math.ceil((Date.now() - new Date(otpCode.sent_at).getTime()) / 1000)
-                : otpConstants.requestTimeout);
+        await otpCode.$query().patch({ sent_counter: otpCode.sent_counter + 1, sent_at: fn.now() as any });
 
-        if (timeoutForNextSent > 0 && otpCode.sent_counter > 1) {
-            return { isSent: false, timeout: timeoutForNextSent };
+        const isSent = await this.deliver(channel, otpType, otpCode.code, target.fullName).catch((error) => {
+            this.logger.error(`Failed to send ${otpType} code: ${error?.message}`);
+            return false;
+        });
+
+        return { isSent, timeout: otpConstants.requestTimeout };
+    }
+
+    private async deliver(channel: string, otpType: OtpType, code: string, fullName?: string): Promise<boolean> {
+        const locals = {
+            otpCode: code,
+            fullName: fullName || commonConstants.defaultUserName,
+            expiresInMinutes: Math.round(otpConstants.expiredInSec / 60),
+        };
+
+        const emailType = emailTypeByOtpType[otpType];
+        if (emailType) {
+            return this.mailService.sendMail({ to: channel, emailType, locals });
         }
 
-        await otpCode.$query().increment('sent_counter', 1);
-        await otpCode.$query().patch({ sent_at: fn.now() });
-
-        let isSent = true;
-        if (process.env.IS_SMS_ON === 'true') {
-            isSent = await this.smsService
-                .sendSMS({
-                    smsType: SMSType.VerifyPhone,
-                    to: otpCode.channel,
-                    locals: { otpCode: otpCode.code },
-                })
-                .catch((error) => {
-                    this.logger.error(error);
-                    return false;
-                });
-        }
-
-        return { isSent, timeout: otpCode.sent_counter <= 1 ? 0 : otpConstants.requestTimeout };
+        return this.smsService.sendSMS({ to: channel, smsType: smsTypeByOtpType[otpType], locals });
     }
 }
