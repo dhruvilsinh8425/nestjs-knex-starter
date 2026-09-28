@@ -20,4 +20,7 @@ export const dbNames = {
     fileData: {
         tableName: 'file_data',
     },
+    zRequestLogs: {
+        tableName: 'z_request_logs',
+    },
 };

@@ -5,3 +5,4 @@ export { SessionToken } from './session.token';
 export { Creds } from './creds';
 export { ResetToken } from './reset.token';
 export { FileData } from './file.data';
+export { ZRequestLog } from './z.request.log';

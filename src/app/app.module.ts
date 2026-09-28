@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ApiMiddleware } from 'src/middlewares';
+import { ApiMiddleware, LogMiddleware } from 'src/middlewares';
 import { DbModule } from 'src/db/db.module';
 import { ApiModulesList } from 'src/api';
 import { RootModule } from 'src/root/root.module';
@@ -29,6 +29,6 @@ export class AppModule implements NestModule {
             .exclude({ path: `/${apiPrefix}/webhooks/{*splat}`, method: RequestMethod.ALL })
             .forRoutes('{*splat}');
 
-        consumer.apply(ApiMiddleware).forRoutes({ path: '{*splat}', method: RequestMethod.ALL });
+        consumer.apply(ApiMiddleware, LogMiddleware).forRoutes({ path: '{*splat}', method: RequestMethod.ALL });
     }
 }

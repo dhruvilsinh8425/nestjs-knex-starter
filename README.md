@@ -50,6 +50,11 @@ Send the returned `accessToken` as the `x-session-key` header. Full logins also 
 - Storage: S3 when `AWS_S3_BUCKET` is set (public URL from `CLOUD_FRONT_BUCKET_URL` if present). Otherwise files go to `public/uploads/` and are served at `API_DOMAIN/uploads/...`, so it works locally without AWS.
 - Use `StorageService` (`src/services/storage`) from any module that needs to upload or delete files.
 
+## Cron & request logs
+
+- Scheduled jobs live in `src/api/cron/cron.service.ts` (`@nestjs/schedule`) and only run when `IS_CRON_ON=true`. `POST /api/cron/test` runs the test job on demand.
+- With `IS_REQUEST_LOG_ON=true`, every API request (except webhooks and the health check) is saved to `z_request_logs` with its route, query, body, status, response and duration. API keys, session tokens, passwords, OTP codes and other tokens are masked, and stored text is cut at 10 KB.
+
 ## Scripts
 
 | Script | Description |
