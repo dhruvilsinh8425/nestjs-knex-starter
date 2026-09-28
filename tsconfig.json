@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "module": "node16",
+        "moduleResolution": "node16",
+        "target": "es2023",
+        "lib": ["es2023"],
+        "types": ["node", "jest", "multer"],
+        "declaration": false,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "sourceMap": false,
+        "outDir": "./dist",
+        "rootDir": ".",
+        "paths": {
+            "src/*": ["./src/*"]
+        },
+        "isolatedModules": true,
+        "skipLibCheck": true,
+        "strict": false,
+        "strictNullChecks": false,
+        "noImplicitAny": false,
+        "strictBindCallApply": false,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": false
+    },
+    "include": ["src/**/*", "test/**/*"]
+}

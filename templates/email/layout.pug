@@ -1,0 +1,18 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+  body(style='margin:0;padding:24px 0;background-color:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#2b3445;')
+    table(style='width:100%;max-width:560px;margin:0 auto;background-color:#ffffff;border-radius:8px;' cellpadding='0' cellspacing='0')
+      tr
+        td(style='padding:32px 40px 8px;font-size:20px;font-weight:bold;') #{appName}
+      tr
+        td(style='padding:8px 40px 32px;font-size:15px;line-height:22px;')
+          block content
+      tr
+        td(style='padding:16px 40px 32px;font-size:13px;color:#6b7280;border-top:1px solid #eef0f3;')
+          if supportEmail
+            | Questions? Contact us at #[a(href=`mailto:${supportEmail}`) #{supportEmail}].
+            br
+          | Thanks, #{appName} team

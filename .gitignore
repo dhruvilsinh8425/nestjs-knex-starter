@@ -1,0 +1,13 @@
+.env
+.env.staging
+.env.production
+.idea
+.vscode
+.DS_Store
+node_modules
+coverage
+firebase.json
+docker-compose.yml
+dist
+0-files
+src/swagger/swagger.doc.json

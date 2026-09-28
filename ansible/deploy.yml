@@ -1,0 +1,107 @@
+- hosts: "{{ target }}"
+  gather_facts: no
+  tasks:
+    # BEFORE DEPLOY
+    - name: Log deploy start
+      shell: echo "[{{ target }}] Deployment started at $(date)"
+      register: deploy_start_log
+      ignore_errors: yes
+
+    - name: Health check before deploy
+      uri:
+        url: "http://localhost:{{ health_check_port }}/api/common/health-check"
+        method: GET
+        status_code: 200
+      ignore_errors: yes
+
+    # DEPLOY STEPS
+    - name: Clean tmp folder
+      file:
+        state: absent
+        path: "{{ app_directory_tmp }}"
+
+    - name: Create tmp folder
+      file:
+        path: "{{ app_directory_tmp }}"
+        state: directory
+
+    - name: Upload deployment bundle
+      copy:
+        src: "{{ bundle_file_path }}"
+        dest: "{{ app_directory_tmp }}/bundle.tar.gz"
+        mode: '0644'
+
+    - name: Extract bundle
+      unarchive:
+        src: "{{ app_directory_tmp }}/bundle.tar.gz"
+        dest: "{{ app_directory_tmp }}"
+        remote_src: yes
+
+    - name: Clean previous backup
+      file:
+        state: absent
+        path: "{{ app_directory_bak }}"
+
+    - name: Check if current app exists
+      stat:
+        path: "{{ app_directory }}"
+      register: app_stat
+
+    - name: Backup current app
+      command: mv {{ app_directory }} {{ app_directory_bak }}
+      when: app_stat.stat.exists
+
+    - name: Move new build to live
+      command: mv {{ app_directory_tmp }} {{ app_directory }}
+
+    - name: Install dependencies
+      block:
+        - name: Try npm ci
+          command: npm ci --omit=dev
+          args:
+            chdir: "{{ app_directory }}"
+          register: npm_ci_result
+          ignore_errors: yes
+
+        - name: Fallback npm install
+          command: npm install --omit=dev
+          args:
+            chdir: "{{ app_directory }}"
+          when: npm_ci_result.rc != 0
+
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Start or reload PM2 app
+      command: pm2 startOrReload {{ pm2_config_file }} --env {{ pm2_env }}
+      args:
+        chdir: "{{ app_directory }}"
+      environment:
+        NODE_OPTIONS: "--max-old-space-size=812"
+
+    - name: Save PM2 process list
+      command: pm2 save
+
+    # AFTER DEPLOY
+    - name: Log deploy end
+      shell: echo "[{{ target }}] Deployment completed at $(date)"
+      register: deploy_end_log
+      ignore_errors: yes
+
+    - name: Health check after deploy
+      uri:
+        url: "http://localhost:{{ health_check_port }}/api/common/health-check"
+        method: GET
+        status_code: 200
+      register: health_response
+      ignore_errors: yes
+
+    - name: Print deploy summary
+      debug:
+        msg: |
+          ****Deployment Completed***
+          - Health Status: {{ health_response.status | default('unknown') }}
+          - Started At: {{ deploy_start_log.stdout | default('N/A') }}
+          - Ended At:   {{ deploy_end_log.stdout | default('N/A') }}

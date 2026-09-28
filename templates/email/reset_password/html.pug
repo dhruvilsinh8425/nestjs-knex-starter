@@ -1,0 +1,7 @@
+extends ../layout.pug
+
+block content
+  p Hello #{fullName},
+  p We received a request to reset the password for your #{appName} account. Use this code to continue:
+  p(style='margin:24px 0;text-align:center;font-size:28px;font-weight:bold;letter-spacing:6px;') #{otpCode}
+  p This code expires in #{expiresInMinutes} minutes. If you didn't request a password reset, you can ignore this email - your password won't change.

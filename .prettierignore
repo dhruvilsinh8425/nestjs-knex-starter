@@ -1,0 +1,6 @@
+/dist
+/coverage
+/swagger
+/public
+/.github
+/ansible

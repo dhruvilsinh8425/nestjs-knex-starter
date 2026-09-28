@@ -1,0 +1,27 @@
+- var appleStore = page ? appOpenSlug + "://" + page + (id ? "/"+ id : "") : appOpenSlug + "://";
+- var androidStore = page ? appOpenSlug + "://" + page + (id ? "/"+ id : "") + "#Intent;scheme=scheme;package=androidPackageName;end;" : appOpenSlug + "://#Intent;scheme=scheme;package=androidPackageName;end;";
+doctype html
+head
+  title #{appName} App #{page} 
+.container
+  .content
+    .title(style='text-align: center;') #{appName}: Redirecting...
+script(type='text/javascript').
+  function getMobileOperatingSystem() {
+    var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    var redirect = "#{webSite}";
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      window.location.replace("#{appleStore}");
+      redirect = "#{appleStoreUrl}";
+    }
+    if (/android/i.test(userAgent) && !window.MSStream) {
+      window.location.replace("#{androidStore}");
+      redirect = "#{googlePlayUrl}";
+    }
+    console.log(redirect);
+    setTimeout(function () {
+    window.location.replace(redirect);
+    }, 4000);
+    return "false";
+  }
+  getMobileOperatingSystem();

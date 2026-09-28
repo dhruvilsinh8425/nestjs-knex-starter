@@ -1,0 +1,7 @@
+extends ../layout.pug
+
+block content
+  p Hello #{fullName},
+  p Use the code below to verify your email address for #{appName}:
+  p(style='margin:24px 0;text-align:center;font-size:28px;font-weight:bold;letter-spacing:6px;') #{otpCode}
+  p This code expires in #{expiresInMinutes} minutes. If you didn't create an account, you can ignore this email.
